@@ -12,3 +12,4 @@ Muitos browser nao tem compatibilidade com o ES6,entao usaremos o transpiller pa
 Babel(transpiller)
 adicionando comandos na propiedade script no package.json adicionando nodemon config
 
+02-configurando o express

@@ -38,7 +38,8 @@
   },
   "nodemonConfig": {
     "watch": [
-      "src"
+      "src",
+      "index.js"
     ]
   }
 }
