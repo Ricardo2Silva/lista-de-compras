@@ -1,6 +1,8 @@
+import mongoDatabase from './src/config/mongo.config';
 import expressConfig from './src/config/express.config';
 import envVariaveis from './src/config/environment.config';
 
+mongoDatabase();
 
 expressConfig().listen(envVariaveis.variables.port,()=>{
 
