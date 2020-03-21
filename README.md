@@ -13,3 +13,10 @@ Babel(transpiller)
 adicionando comandos na propiedade script no package.json adicionando nodemon config
 
 02-configurando o express
+
+03-configurando variaveis de ambiente
+
+adicionamos dev arquivo dentro de /environment
+adicionamos prd arquivo dentro de /environment
+adicionamos enviroment.config dentro de /config
+importando arquivo  acima dentro do index
