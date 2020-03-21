@@ -20,3 +20,10 @@ adicionamos dev arquivo dentro de /environment
 adicionamos prd arquivo dentro de /environment
 adicionamos enviroment.config dentro de /config
 importando arquivo  acima dentro do index
+
+04-configurando rotas e controllers
+ criar rotas.config
+ no express.config passar a instancia do  express (app)pra dentro do arquivo de rotas
+ criar a rota de autenticacao
+ registrar no config de rotas
+ criar controller de rotas(aqui é uma classe) 

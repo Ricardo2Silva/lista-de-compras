@@ -1,12 +1,10 @@
 import express from 'express';
+import rotasConfig from './rotas.config';
 
 export default () => {
-    const app =express();
+    const app= express();
 
-    app.get('/teste',(req,res)=>{
-
-        res.json('o servidor esta trabalhando!');
-    })
+    rotasConfig(app)
 
     return app;
 
