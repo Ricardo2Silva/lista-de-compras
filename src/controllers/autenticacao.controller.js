@@ -1,12 +1,17 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonWebtoken';
 import UsuarioModel from '../models/usuario.model';
+import {validationResult} from "express-validator";
 
 export  default class autenticacaoController{
 
     async registrar(req,res){
 
+        const erros = validationResult(req);
 
+        if (!erros.isEmpty()){
+            return res.status(400).json(erros);
+        }
 
         const existeEmail = await UsuarioModel.findOne({email:req.body.email});
 
@@ -39,6 +44,12 @@ export  default class autenticacaoController{
 
     async login(req,res){
 
+        const erros = validationResult(req);
+
+        if (!erros.isEmpty()){
+            return res.status(400).json(erros);
+        }
+
         const usuario = await UsuarioModel.findOne({email:req.body.email});
 
         if(!usuario){
@@ -51,13 +62,19 @@ export  default class autenticacaoController{
             return res.status(500).json({erro:'email ou senha invalidos!'});
         }
 
+        const payload = {
+            usuarioId: usuario._id,
+            usuarioNome: usuario.nome,
+            usuarioEmail: usuario.email,
+            permissao:['all']
+        };
 
-        const payload = {usuarionome:usuario.nome,permissao:['all']};
+
         const tokenAcesso = jwt.sign(payload,process.env.TOKEN_SECRETO);
 
-        res.header('Autenticacao',tokenAcesso);
+        res.header(process.env.TOKEN_HEADER_NOME,tokenAcesso);
 
-        return res.status(200).json('sucesso');
+        return res.status(200).json({usuarioId: usuario._id});
     }
 
 }
