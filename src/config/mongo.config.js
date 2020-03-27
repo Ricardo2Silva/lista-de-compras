@@ -5,11 +5,11 @@ if(envVariaveis.variables.env ==='dev'){
     mongoose.set('debug',true);
 }
 
-
 export default () => {
     mongoose.connect(envVariaveis.variables.mongoUrlConexao, {
         useCreateIndex: true,
         useNewUrlParser: true,
+        useFindAndModify:false,
         useUnifiedTopology: true
     });
 

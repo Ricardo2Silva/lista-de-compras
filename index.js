@@ -4,6 +4,10 @@ import envVariaveis from './src/config/environment.config';
 
 mongoDatabase();
 
+// run this peace of code to insert categories
+import CategoriaService from "./src/services/categoria.service";
+//new CategoriaService().categoriaPopularColecao();
+
 expressConfig().listen(envVariaveis.variables.port,()=>{
 
     console.log('Ambiente: ',process.env.APP_ENV);

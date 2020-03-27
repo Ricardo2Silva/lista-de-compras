@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonWebtoken';
-import UsuarioModel from '../models/usuario.model';
+import jwt from 'jsonwebtoken';
+import DataUtil from '../utils/data.util';
 import {validationResult} from "express-validator";
+import UsuarioModel from '../models/usuario.model';
+import AtivacaoCodigoModel from '../models/codigoAtivacao.model';
+import AtivacaoCodigoService from "../services/codigoAtivacao.service";
 
 export  default class autenticacaoController{
 
@@ -31,7 +34,12 @@ export  default class autenticacaoController{
             });
             const usuarioSalvo =await usuario.save();
 
-            return res.status(201).json({usuarioID:usuarioSalvo._id});
+            const ativacaoCodigoService = new AtivacaoCodigoService();
+            const enviarCodigoAtivacao = ativacaoCodigoService.enviarAtivacaoCodigo(usuario.email);
+            const emailMensagem = enviarCodigoAtivacao ? 'a ativação do código foi enviada para o email' :'ocorreu um erro ao tentar enviar a ativação do código por email. vá para / auth / activation';
+
+            return res.status(201).json({usuarioId: usuarioSalvo._id, mensagem: emailMensagem});
+
 
         }catch (err) {
            return res.status(500).json('houve um erro inesperado');
@@ -56,7 +64,7 @@ export  default class autenticacaoController{
             return res.status(400).json({erro: 'email ou senha invalidos!'});
         }
 
-        const senhaValida= await bcrypt.compare(req.body.senha,usuario.senha)
+        const senhaValida= await bcrypt.compare(req.body.senha,usuario.senha);
 
         if(!senhaValida){
             return res.status(500).json({erro:'email ou senha invalidos!'});
@@ -76,5 +84,106 @@ export  default class autenticacaoController{
 
         return res.status(200).json({usuarioId: usuario._id});
     }
+    async enviarCodigoAtivacao(req, res) {
+        try {
+            const erros = validationResult(req);
 
+            if (!erros.isEmpty()) {
+                return res.status(400).json(erros);
+            }
+
+            const email = req.body.email;
+            const usuario = await UsuarioModel.findOne(email);
+
+            if (usuario && usuario.active) {
+                return res.status(400).json({ errorMessage:'Usuário já ativado' });
+            }
+            const ativacaoCodigoService = new AtivacaoCodigoService();
+            const enviarCodigoAtivacao = ativacaoCodigoService.enviarAtivacaoCodigo(usuario.email);
+            const emailMensagem = enviarCodigoAtivacao ? 'a ativação do código foi enviada para o email' :'ocorreu um erro ao tentar enviar a ativação do código por email. vá para / auth / activation';
+
+            return res.status(201).json({mensagem: emailMensagem});
+
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json('houve um erro inesperado ao tentar enviar a ativação do código. tente novamente mais tarde');
+        }
+
+    }
+    async ativarConta(req, res) {
+        try {
+            const erros = validationResult(req);
+
+            if (!erros.isEmpty()) {
+                return res.status(400).json(erros);
+            }
+
+            const email = req.body.email;
+            const codigo = req.body.activationCode;
+
+            const usuario = await UsuarioModel.findOne({email});
+
+            if (!usuario) {
+                return res.status(400).json({ errorMessage: 'Email  nao existe  em seu database' });
+            }
+
+            if (usuario.active) {
+                return res.status(400).json({ errorMessage: 'Usuário já ativado' });
+            }
+
+            const ativacao = AtivacaoCodigoModel.findOne({ email, codigo });
+
+            if (!ativacao) {
+                return res.status(400).json({ errorMessage:'código de ativação não corresponde' });
+            }
+
+            const dataUtil = new DataUtil();
+
+            if (!dataUtil.isCodeActivationDateValid(ativacao.generated)) {
+                return res.status(400).json({ errorMessage:'o código de ativação expirou. Por favor gere outro código' });
+            }
+
+            UsuarioModel.updateOne({_id: usuario._id}, { active: true });
+            return res.status(201).json({ errorMessage: 'Usuário foi ativado' });
+
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json('houve um erro inesperado ao tentar ativar a conta. tente novamente mais tarde');
+        }
+
+    }
+    async desativarConta(req, res) {
+        try {
+            const erros = validationResult(req);
+
+            if (!erros.isEmpty()) {
+                return res.status(400).json(erros);
+            }
+
+            const usuario = await UsuarioModel.findOne({email: req.body.email});
+
+            if (!usuario) {
+                return res.status(400).json({errorMessage: 'email ou senha invalidos!'});
+            }
+
+            if (!usuario.active) {
+                return res.status(401).json({errorMessage:'Conta de usuário já desativada'});
+            }
+
+            const senhaValida = await bcrypt.compare(req.body.senha, usuario.senha);
+
+            if (!senhaValida) {
+                return res.status(400).json({errorMessage: 'email ou senha invalidos!'});
+            }
+
+            usuario.active = false;
+            UsuarioModel.updateOne({_id: usuario._id}, { active: false });
+            return res.status(201).json({ errorMessage:'Usuário desabilitado' });
+
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json('houve um erro inesperado ao tentar ativar a conta. tente novamente mais tarde');
+        }
+
+    }
 }
