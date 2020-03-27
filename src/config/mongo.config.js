@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-import envVariaveis from './environment.config';
 
-if(envVariaveis.variables.env ==='dev'){
+if(process.env.APP_ENV ==='dev'){
     mongoose.set('debug',true);
 }
 
 export default () => {
-    mongoose.connect(envVariaveis.variables.mongoUrlConexao, {
+    mongoose.connect(process.env.MONGODB_URL, {
         useCreateIndex: true,
         useNewUrlParser: true,
         useFindAndModify:false,

@@ -1,8 +1,8 @@
 import nodeMailer from 'nodemailer';
-import envVariables from '../config/environment.config';
+
 
 const transporter = nodeMailer.createTransport({
-    service: envVariables.variables.mailSenderService,
+    service: process.env.MAIL_SERVICE,
     auth: {
         user: process.env.USER_MAIL_SENDER,
         pass: process.env.PASS_MAIL_SENDER
@@ -12,7 +12,7 @@ const transporter = nodeMailer.createTransport({
 export default async (options) => {
     try {
         const sent = await transporter.sendMail({
-            from: `${envVariables.variables.usernameMailSender} <${process.env.USER_MAIL_SENDER}>`,
+            from: `${process.env.MAIL_APP_NAME} <${process.env.USER_MAIL_SENDER}>`,
             to: options.email,
             subject: options.subject,
             text: options.content,

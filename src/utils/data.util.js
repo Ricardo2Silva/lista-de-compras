@@ -1,7 +1,6 @@
 import moment from "moment";
-import envVariaveis from '../config/environment.config';
 
-moment.defaultFormat  = envVariaveis.variables.defaultFormatDate;
+moment.defaultFormat  = process.env.DEFAULT_DATE_FORMAT;
 
 export default class DataUtil {
 
