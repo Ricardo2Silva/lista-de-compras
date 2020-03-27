@@ -5,6 +5,7 @@ import {validationResult} from "express-validator";
 import UsuarioModel from '../models/usuario.model';
 import AtivacaoCodigoModel from '../models/codigoAtivacao.model';
 import AtivacaoCodigoService from "../services/codigoAtivacao.service";
+import RefreshTokenModel from '../models/refreshToken.model';
 
 export  default class autenticacaoController{
 
@@ -73,16 +74,25 @@ export  default class autenticacaoController{
         const payload = {
             usuarioId: usuario._id,
             usuarioNome: usuario.nome,
-            usuarioEmail: usuario.email,
-            permissao:['all']
+            usuarioEmail: usuario.email
         };
 
+        const tokenAcesso = geradorCodigoToken(payload);
+        const tokenAcessoRefresh = jwt.sign(payload,process.env.REFRESH_TOKEN_SECRETO);
 
-        const tokenAcesso = jwt.sign(payload,process.env.TOKEN_SECRETO);
+        const refreshTokenModel = new RefreshTokenModel({
+            refreshToken: tokenAcessoRefresh
+        });
 
-        res.header(process.env.TOKEN_HEADER_NOME,tokenAcesso);
+        const refreshTokenSalvo = await refreshTokenModel.save();
 
-        return res.status(200).json({usuarioId: usuario._id});
+        const resObj = {
+          tokenAcesso,
+          tokenAcessoRefresh: refreshTokenSalvo.refreshToken,
+          tipoToken:'Bearer'
+        };
+
+        return res.status(200).json(resObj);
     }
     async enviarCodigoAtivacao(req, res) {
         try {
@@ -186,4 +196,47 @@ export  default class autenticacaoController{
         }
 
     }
+    async logout(req, res) {
+        const refreshToken = req.body.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(400).json({errorMessage: ' o campo refreshToken  é requerido dentro do corpo'});
+        }
+
+        const tokenDeleted = await RefreshTokenModel.findOneAndRemove({refreshToken}).exec();
+
+        if (tokenDeleted) {
+            return res.status(200).json({message: 'refresh token deletado'});
+        }
+
+        return res.status(400).json({message: ' nao houve token para ser removido!'});
+    }
+
+    async getRefreshToken(req, res) {
+        const refreshToken = req.body.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(400).json({errorMessage: ' campo refreshToken é requerido dentro do corpo'});
+        }
+
+        const contains = await RefreshTokenModel.countDocuments({refreshToken});
+
+        if (!contains) {
+            return res.status(403).json({errorMessage: 'refresh token nao existe'});
+        }
+
+        try {
+            const user = await jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRETO);
+            const accessToken = geradorCodigoToken(user);
+            return res.status(200).json({accessToken});
+
+        } catch (err) {
+            return res.status(403).json({ errorMessage: 'refresh token is not valid' });
+        }
+
+    }
+}
+
+function geradorCodigoToken(payload){
+    return jwt.sign(payload,process.env.TOKEN_SECRETO,{expiresIn: '1800s'});
 }

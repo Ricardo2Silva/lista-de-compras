@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import  gerarCodigo from '../utils/codigoGerador.util';
 
-const categoriaSchema =new mongoose.Schema({
+const categoriaSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
@@ -16,6 +16,9 @@ const categoriaSchema =new mongoose.Schema({
         type: String,
         default: gerarCodigo()
     }
+},
+{
+ collection:'codigos-ativacoes'
 });
 
-export default mongoose.model('codigoAtivacao', categoriaSchema);
+export default mongoose.model('codigo-ativacao', categoriaSchema);

@@ -17,6 +17,8 @@ router.post('/ativar', ativacaoContaValidator(), controle.ativarConta);
 
 router.post('/desativar', validadorLoginUsuario(), controle.desativarConta);
 
+router.delete('/logout', controle.logout);
 
+router.post('/refresh-token', controle.getRefreshToken);
 
 export default router;
