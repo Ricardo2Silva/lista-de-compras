@@ -26,7 +26,10 @@ const usuarioSchema = new mongoose.Schema({
         type:Date,
         default:Date.now
     },
-
+    active: {
+        type: Boolean,
+        default: false
+    }
 });
 
 export default mongoose.model('usuario',usuarioSchema);
